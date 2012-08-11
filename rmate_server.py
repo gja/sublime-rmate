@@ -76,7 +76,6 @@ class WaitingForDot:
 
     def data_received(self, data):
         print "the data is " + self.data  # and open sublime
-        self.handler.write_file("foobar", "oogabooga")
         return WaitingForCommand(self.handler)
 
 
