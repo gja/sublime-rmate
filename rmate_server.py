@@ -14,6 +14,8 @@ class RMateServer(asyncore.dispatcher):
         self.listen(5)
 
     def run(self):
+        # pass
+        # asyncore.loop()
         server_thread = threading.Thread(target=asyncore.loop)
         server_thread.daemon = True
         server_thread.start()
@@ -24,7 +26,7 @@ class RMateServer(asyncore.dispatcher):
             pass
         else:
             sock, addr = pair
-            handler = RMateHandler(sock)
+            handler = RMateHandler(sock, self.sublime_plugin)
             handler.say_hello()
 
 
@@ -75,15 +77,16 @@ class WaitingForDot:
         self.handler.set_terminator("\n")
 
     def data_received(self, data):
-        print "the data is " + self.data  # and open sublime
+        self.handler.sublime_plugin.open_file(self.headers["token"], self.data)
         return WaitingForCommand(self.handler)
 
 
 class RMateHandler(asynchat.async_chat):
-    def __init__(self, sock):
+    def __init__(self, sock, sublime_plugin):
         asynchat.async_chat.__init__(self, sock)
         self.received_data = ""
         self.state = WaitingForCommand(self)
+        self.sublime_plugin = sublime_plugin
 
     def say_hello(self):
         self.push(socket.gethostname() + "\n")
@@ -105,8 +108,3 @@ data: {length}
 .
 """.format(token=token, length=len(file_contents), file_contents=file_contents)
         self.push(command)
-
-server = RMateServer("foobar")
-server.run()
-string = input()
-server.shutdown()
