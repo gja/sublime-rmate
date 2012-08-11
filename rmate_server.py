@@ -14,7 +14,6 @@ class RMateServer(asyncore.dispatcher):
         self.listen(5)
 
     def run(self):
-        # asyncore.loop()
         server_thread = threading.Thread(target=asyncore.loop)
         server_thread.daemon = True
         server_thread.start()
@@ -28,31 +27,17 @@ class RMateServer(asyncore.dispatcher):
             RMateHandler(sock)
 
 
-class RMateHandler(asyncore.dispatcher_with_send):
-    def init(self, sock):
-        asyncore.file_wrapper.__init__(self, sock)
-        self.current_line = ""
+class RMateHandler(asynchat.async_chat):
+    def __init__(self, sock):
+        self.received_data = ""
+        asynchat.async_chat.__init__(self, sock)
+        self.set_terminator('\n')
 
-    def handle_connect(self):
-        print "foobar"
-        # self.send(socket.gethostname() + "\n")
+    def collect_incoming_data(self, data):
+        self.received_data += data
 
-    def handle_accept(self):
-        print "blah"
-
-    def handle_read(self):
-        data = self.recv(10)
-        if '\n' in data:
-            print "line"
-        else:
-            print "no line"
-
-    def handle(self):
-        self.say_hello()
-
-        cmd = self.rfile.readline().rstrip()
-        print cmd
-
+    def found_terminator(self):
+        print self.received_data
 
 server = RMateServer("foobar")
 server.run()
