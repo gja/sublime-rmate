@@ -24,7 +24,8 @@ class RMateServer(asyncore.dispatcher):
             pass
         else:
             sock, addr = pair
-            RMateHandler(sock)
+            handler = RMateHandler(sock)
+            handler.say_hello()
 
 
 class RMateHandler(asynchat.async_chat):
@@ -33,11 +34,15 @@ class RMateHandler(asynchat.async_chat):
         asynchat.async_chat.__init__(self, sock)
         self.set_terminator('\n')
 
+    def say_hello(self):
+        self.send(socket.gethostname() + "\n")
+
     def collect_incoming_data(self, data):
         self.received_data += data
 
     def found_terminator(self):
         print self.received_data
+        self.received_data = ""
 
 server = RMateServer("foobar")
 server.run()
