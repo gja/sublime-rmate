@@ -76,6 +76,7 @@ class WaitingForDot:
 
     def data_received(self, data):
         print "the data is " + self.data  # and open sublime
+        self.handler.write_file("foobar", "oogabooga")
         return WaitingForCommand(self.handler)
 
 
@@ -96,6 +97,15 @@ class RMateHandler(asynchat.async_chat):
             return
         self.state = self.state.data_received(self.received_data)
         self.received_data = ""
+
+    def write_file(self, token, file_contents):
+        command = """save
+token: {token}
+data: {length}
+{file_contents}
+.
+""".format(token=token, length=len(file_contents), file_contents=file_contents)
+        self.push(command)
 
 server = RMateServer("foobar")
 server.run()
