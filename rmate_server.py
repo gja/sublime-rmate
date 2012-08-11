@@ -86,7 +86,7 @@ class RMateHandler(asynchat.async_chat):
         self.state = WaitingForCommand(self)
 
     def say_hello(self):
-        self.send(socket.gethostname() + "\n")
+        self.push(socket.gethostname() + "\n")
 
     def collect_incoming_data(self, data):
         self.received_data += data
