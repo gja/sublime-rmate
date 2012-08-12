@@ -1,3 +1,4 @@
 [
-  { "caption": "RMate: Start the RMate remote server", "command": "start_rmate" }
+  { "caption": "RMate: Start the RMate remote server", "command": "start_rmate" },
+  { "caption": "RMate: Stop the RMate remote server", "command": "stop_rmate" }
 ]
