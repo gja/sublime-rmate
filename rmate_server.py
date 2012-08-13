@@ -42,14 +42,21 @@ class RMateServer(asyncore.dispatcher):
     def run_on_thread(self, block):
         RunOnThread(lambda: block(self), self.run_map)
 
+    # These two methods are really implementation bound
+    def get_handler_by_id(self, handler_id):
+        return self.run_map[handler_id]
+
+    def get_handler_id(self, handler):
+        return handler.handler_id()
+
     def close_file(self, handler_id, token):
-        handler = self.run_map[handler_id]
+        handler = self.get_handler_by_id(handler_id)
         if handler == None:
             return
         handler.close_file(token)
 
     def update_file(self, handler_id, token, contents):
-        handler = self.run_map[handler_id]
+        handler = self.get_handler_by_id(handler_id)
         if handler == None:
             return
         handler.write_file(token, contents)
