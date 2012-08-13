@@ -30,8 +30,12 @@ class RMateServer(asyncore.dispatcher):
         server_thread.daemon = True
         server_thread.start()
 
+    def close_all(self):
+        for channel in self.run_map.values():
+            channel.close()
+
     def stop(self):
-        RunOnThread(self.close, self.run_map)
+        RunOnThread(self.close_all, self.run_map)
 
     def handle_accept(self):
         pair = self.accept()
