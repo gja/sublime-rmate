@@ -32,7 +32,7 @@ class SublimeRmateAdapter:
         if not self.is_server_running():
             return
         print "stopping rmate server"
-        self.server.close()
+        self.server.stop()
         self.server = None
 
     def run_in_sublime(self, proc):

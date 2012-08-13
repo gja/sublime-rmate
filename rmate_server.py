@@ -3,6 +3,17 @@ import asynchat
 import socket
 import threading
 
+# Ugly hack to communicate with the asyncore thread
+class RunOnThread(asyncore.dispatcher):
+    def __init__(self, block, map):
+        self.block = block
+        asyncore.dispatcher.__init__(self, map=map)
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connect(('localhost', 52698))
+
+    def handle_connect(self):
+        self.block()
+        self.close()
 
 class RMateServer(asyncore.dispatcher):
     def __init__(self, sublime_plugin, connection_details = ('localhost', 52698)):
@@ -18,6 +29,9 @@ class RMateServer(asyncore.dispatcher):
         server_thread = threading.Thread(target=lambda: asyncore.loop(map=self.run_map))
         server_thread.daemon = True
         server_thread.start()
+
+    def stop(self):
+        RunOnThread(self.close, self.run_map)
 
     def handle_accept(self):
         pair = self.accept()
