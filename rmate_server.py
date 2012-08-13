@@ -44,7 +44,13 @@ class RMateServer(asyncore.dispatcher):
         handler = self.run_map[handler_id]
         if handler == None:
             return
-        handler.close()
+        handler.say_bye()
+
+    def update_file(self, handler_id, token, contents):
+        handler = self.run_map[handler_id]
+        if handler == None:
+            return
+        handler.write_file(token, contents)
 
     def handle_accept(self):
         pair = self.accept()
@@ -131,9 +137,12 @@ class RMateHandler(asynchat.async_chat):
 token: {token}
 data: {length}
 {file_contents}
-.
 """.format(token=token, length=len(file_contents), file_contents=file_contents)
         self.push(command)
+
+    def say_bye(self):
+        self.push("close\n\n")
+        self.close()
 
     def handler_id(self):
         return self.socket.fileno()
