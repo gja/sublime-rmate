@@ -2,6 +2,7 @@ import sublime
 import sublime_plugin
 import tempfile
 from rmate_server import *
+import re
 
 
 class NullServer:
@@ -50,7 +51,7 @@ class SublimeRmateAdapter:
         self.run_in_sublime(lambda: self.open_file_threaded(token, contents, handler_id))
 
     def open_file_threaded(self, token, contents, handler_id):
-        new_file = tempfile.NamedTemporaryFile(delete=False)
+        new_file = tempfile.NamedTemporaryFile(delete=False, suffix=re.sub("[^a-zA-Z0-9._-]", "", token))
         new_file.write(contents)
         filename = new_file.name
         new_file.close()

@@ -15,6 +15,7 @@ class RunOnThread(asyncore.dispatcher):
         self.block()
         self.close()
 
+
 class RMateServer(asyncore.dispatcher):
     def __init__(self, sublime_plugin, connection_details = ('localhost', 52698)):
         self.run_map = {}
