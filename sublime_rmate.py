@@ -23,11 +23,9 @@ class SublimeRmateAdapter:
             cls.singleton_instance = SublimeRmateAdapter()
         return cls.singleton_instance
 
-    def is_server_running(self):
-        return self.server.running()
-
     def start_server(self):
-        if self.is_server_running():
+        if self.server.running():
+            print "rmate server already running"
             return
         print "rmate server staring"
         self.server = RMateServer(self)
