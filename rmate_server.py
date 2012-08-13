@@ -6,7 +6,8 @@ import threading
 
 class RMateServer(asyncore.dispatcher):
     def __init__(self, sublime_plugin, connection_details = ('localhost', 52698)):
-        asyncore.dispatcher.__init__(self)
+        self.run_map = {}
+        asyncore.dispatcher.__init__(self, map=self.run_map)
         self.sublime_plugin = sublime_plugin
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.set_reuse_addr()
@@ -14,9 +15,7 @@ class RMateServer(asyncore.dispatcher):
         self.listen(5)
 
     def run(self):
-        # pass
-        # asyncore.loop()
-        server_thread = threading.Thread(target=asyncore.loop)
+        server_thread = threading.Thread(target=lambda: asyncore.loop(map=self.run_map))
         server_thread.daemon = True
         server_thread.start()
 
@@ -26,7 +25,7 @@ class RMateServer(asyncore.dispatcher):
             pass
         else:
             sock, addr = pair
-            handler = RMateHandler(sock, self.sublime_plugin)
+            handler = RMateHandler(sock, self.sublime_plugin, self.run_map)
             handler.say_hello()
 
 
@@ -82,8 +81,8 @@ class WaitingForDot:
 
 
 class RMateHandler(asynchat.async_chat):
-    def __init__(self, sock, sublime_plugin):
-        asynchat.async_chat.__init__(self, sock)
+    def __init__(self, sock, sublime_plugin, run_map):
+        asynchat.async_chat.__init__(self, sock, map=run_map)
         self.received_data = ""
         self.state = WaitingForCommand(self)
         self.sublime_plugin = sublime_plugin
