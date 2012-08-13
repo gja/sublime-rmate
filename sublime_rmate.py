@@ -55,6 +55,12 @@ class SublimeRmateView:
     def save(self):
         SublimeRmateAdapter.instance().update_file(self.handler_id(), self.token(), self.contents())
 
+    def file_saved(self):
+        if self.sublime_view.file_name() == self.filename():
+            self.save()
+        else:
+            self.close()
+
     def handler_id(self):
         return self.sublime_view.settings().get("rmate_handler_id")
 
@@ -131,4 +137,4 @@ class SublimeRmateEventListener(sublime_plugin.EventListener):
         if rmate_view.not_rmate_file():
             return
         print "saving remote file"
-        rmate_view.save()
+        rmate_view.file_saved()

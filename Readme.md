@@ -15,5 +15,3 @@ Scroll down to the rmate section here: http://blog.macromates.com/2011/mate-and-
 Known Issues:
 -------------
 * File titles are not correct
-* If you save a file as something else, it will not disconnect from the server
-* Temporary files are not deleted
