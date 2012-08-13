@@ -38,7 +38,10 @@ class RMateServer(asyncore.dispatcher):
         RunOnThread(lambda: block(self), self.run_map)
 
     def close_handler(self, handler_id):
-        self.run_map[handler_id].close()
+        handler = self.run_map[handler_id]
+        if handler == None:
+            return
+        handler.close()
 
     def handle_accept(self):
         pair = self.accept()
@@ -97,7 +100,7 @@ class WaitingForDot:
         self.handler.set_terminator("\n")
 
     def data_received(self, data):
-        self.handler.sublime_plugin.open_file(self.headers["token"], self.data)
+        self.handler.sublime_plugin.open_file(self.headers["token"], self.data, self.handler.handler_id())
         return WaitingForCommand(self.handler)
 
 
@@ -128,3 +131,6 @@ data: {length}
 .
 """.format(token=token, length=len(file_contents), file_contents=file_contents)
         self.push(command)
+
+    def handler_id(self):
+        return self.socket.fileno()
