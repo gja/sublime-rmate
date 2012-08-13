@@ -3,6 +3,7 @@ import sublime_plugin
 import tempfile
 from rmate_server import *
 import re
+import os
 
 
 class NullServer:
@@ -25,23 +26,43 @@ class SublimeRmateView:
         new_file.close()
         return filename
 
+    def delete_file_on_filesystem(self):
+        os.remove(self.filename())
+
     @classmethod
     def new_file(cls, token, contents, handler_id):
         filename = cls.create_file_on_filesystem(token, contents)
         window = sublime.active_window()
         view = SublimeRmateView(window.open_file(filename))
-        view.set_rmate_properties(handler_id, token)
+        view.set_rmate_properties(handler_id, token, filename)
         return view
 
-    def set_rmate_properties(self, handler_id, token):
+    def set_rmate_properties(self, handler_id, token, filename):
         self.sublime_view.settings().set("rmate_handler_id", handler_id)
         self.sublime_view.settings().set("rmate_handler_token", token)
+        self.sublime_view.settings().set("rmate_filename", filename)
+
+    def erase_rmate_properties(self):
+        self.sublime_view.settings().erase("rmate_handler_id")
+        self.sublime_view.settings().erase("rmate_handler_token")
+        self.sublime_view.settings().erase("rmate_filename")
+
+    def close(self):
+        SublimeRmateAdapter.instance().close_file(self.handler_id(), self.token())
+        self.delete_file_on_filesystem()
+        self.erase_rmate_properties()
+
+    def save(self):
+        SublimeRmateAdapter.instance().update_file(self.handler_id(), self.token(), self.contents())
 
     def handler_id(self):
         return self.sublime_view.settings().get("rmate_handler_id")
 
     def token(self):
         return self.sublime_view.settings().get("rmate_handler_token")
+
+    def filename(self):
+        return self.sublime_view.settings().get("rmate_filename")
 
     def not_rmate_file(self):
         return not self.sublime_view.settings().has("rmate_handler_id")
@@ -103,11 +124,11 @@ class SublimeRmateEventListener(sublime_plugin.EventListener):
         rmate_view = SublimeRmateView(view)
         if rmate_view.not_rmate_file():
             return
-        SublimeRmateAdapter.instance().close_file(rmate_view.handler_id(), rmate_view.token())
+        rmate_view.close()
 
     def on_post_save(self, view):
         rmate_view = SublimeRmateView(view)
         if rmate_view.not_rmate_file():
             return
         print "saving remote file"
-        SublimeRmateAdapter.instance().update_file(rmate_view.handler_id(), rmate_view.token(), rmate_view.contents())
+        rmate_view.save()
