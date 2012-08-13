@@ -37,6 +37,18 @@ class SublimeRmateView:
         self.sublime_view.settings().set("rmate_handler_id", handler_id)
         self.sublime_view.settings().set("rmate_handler_token", token)
 
+    def handler_id(self):
+        return self.sublime_view.settings().get("rmate_handler_id")
+
+    def token(self):
+        return self.sublime_view.settings().get("rmate_handler_token")
+
+    def not_rmate_file(self):
+        return not self.sublime_view.settings().has("rmate_handler_id")
+
+    def contents(self):
+        return self.sublime_view.substr(sublime.Region(0, self.sublime_view.size()))
+
 
 class SublimeRmateAdapter:
     singleton_instance = None
@@ -88,17 +100,14 @@ class StopRmateCommand(sublime_plugin.ApplicationCommand):
 
 class SublimeRmateEventListener(sublime_plugin.EventListener):
     def on_close(self, view):
-        handler_id = view.settings().get("rmate_handler_id")
-        token = view.settings().get("rmate_handler_token")
-        if handler_id == None or token == None:
+        rmate_view = SublimeRmateView(view)
+        if rmate_view.not_rmate_file():
             return
-        SublimeRmateAdapter.instance().close_file(handler_id, token)
+        SublimeRmateAdapter.instance().close_file(rmate_view.handler_id(), rmate_view.token())
 
     def on_post_save(self, view):
-        handler_id = view.settings().get("rmate_handler_id")
-        token = view.settings().get("rmate_handler_token")
-        if handler_id == None or token == None:
+        rmate_view = SublimeRmateView(view)
+        if rmate_view.not_rmate_file():
             return
         print "saving remote file"
-        contents = view.substr(sublime.Region(0, view.size()))
-        SublimeRmateAdapter.instance().update_file(handler_id, token, contents)
+        SublimeRmateAdapter.instance().update_file(rmate_view.handler_id(), rmate_view.token(), rmate_view.contents())
