@@ -3,11 +3,19 @@ import sublime_plugin
 from rmate_server import *
 
 
+class NullServer:
+    def running(self):
+        False
+
+    def run_on_thread(self, block):
+        pass
+
+
 class SublimeRmateAdapter:
     singleton_instance = None
 
     def __init__(self):
-        self.server = None
+        self.server = NullServer()
 
     @classmethod
     def instance(cls):
@@ -16,10 +24,7 @@ class SublimeRmateAdapter:
         return cls.singleton_instance
 
     def is_server_running(self):
-        if self.server:
-            return True
-        else:
-            return False
+        return self.server.running()
 
     def start_server(self):
         if self.is_server_running():
@@ -29,15 +34,11 @@ class SublimeRmateAdapter:
         self.server.run()
 
     def stop_server(self):
-        if not self.is_server_running():
-            return
         print "stopping rmate server"
         self.server.run_on_thread(lambda server: server.close_all())
-        self.server = None
+        self.server = NullServer()
 
     def close_handler(self, handler_id):
-        if not self.is_server_running():
-            return
         self.server.run_on_thread(lambda server: server.close_handler(handler_id))
 
     def run_in_sublime(self, proc):
