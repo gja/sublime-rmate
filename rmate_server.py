@@ -3,6 +3,7 @@ import asynchat
 import socket
 import threading
 
+
 # Ugly hack to communicate with the asyncore thread
 class RunOnThread(asyncore.dispatcher):
     def __init__(self, block, map):
@@ -41,11 +42,11 @@ class RMateServer(asyncore.dispatcher):
     def run_on_thread(self, block):
         RunOnThread(lambda: block(self), self.run_map)
 
-    def close_handler(self, handler_id):
+    def close_file(self, handler_id, token):
         handler = self.run_map[handler_id]
         if handler == None:
             return
-        handler.say_bye()
+        handler.close_file(token)
 
     def update_file(self, handler_id, token, contents):
         handler = self.run_map[handler_id]
@@ -110,7 +111,7 @@ class WaitingForDot:
         self.handler.set_terminator("\n")
 
     def data_received(self, data):
-        self.handler.sublime_plugin.open_file(self.headers["token"], self.data, self.handler.handler_id())
+        self.handler.open_file(self.headers["token"], self.data)
         return WaitingForCommand(self.handler)
 
 
@@ -120,9 +121,14 @@ class RMateHandler(asynchat.async_chat):
         self.received_data = ""
         self.state = WaitingForCommand(self)
         self.sublime_plugin = sublime_plugin
+        self.open_files = []
 
     def say_hello(self):
         self.push(socket.gethostname() + "\n")
+
+    def open_file(self, token, contents):
+        self.open_files.append(token)
+        self.sublime_plugin.open_file(token, contents, self.handler_id())
 
     def collect_incoming_data(self, data):
         self.received_data += data
@@ -141,9 +147,15 @@ data: {length}
 """.format(token=token, length=len(file_contents), file_contents=file_contents)
         self.push(command)
 
-    def say_bye(self):
-        self.push("close\n\n")
-        self.close()
+    def close_file(self, token):
+        command = """close
+token: {token}
+
+""".format(token=token)
+        self.push(command)
+        self.open_files.remove(token)
+        if not self.open_files:
+            self.close()
 
     def handler_id(self):
         return self.socket.fileno()

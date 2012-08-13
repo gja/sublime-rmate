@@ -38,8 +38,8 @@ class SublimeRmateAdapter:
         self.server.run_on_thread(lambda server: server.close_all())
         self.server = NullServer()
 
-    def close_handler(self, handler_id):
-        self.server.run_on_thread(lambda server: server.close_handler(handler_id))
+    def close_file(self, handler_id, token):
+        self.server.run_on_thread(lambda server: server.close_file(handler_id, token))
 
     def update_file(self, handler_id, token, contents):
         self.server.run_on_thread(lambda server: server.update_file(handler_id, token, contents))
@@ -75,9 +75,10 @@ class StopRmateCommand(sublime_plugin.ApplicationCommand):
 class SublimeRmateEventListener(sublime_plugin.EventListener):
     def on_close(self, view):
         handler_id = view.settings().get("rmate_handler_id")
-        if handler_id == None:
+        token = view.settings().get("rmate_handler_token")
+        if handler_id == None or token == None:
             return
-        SublimeRmateAdapter.instance().close_handler(handler_id)
+        SublimeRmateAdapter.instance().close_file(handler_id, token)
 
     def on_post_save(self, view):
         handler_id = view.settings().get("rmate_handler_id")
