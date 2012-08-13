@@ -13,6 +13,31 @@ class NullServer:
         pass
 
 
+class SublimeRmateView:
+    def __init__(self, sublime_view):
+        self.sublime_view = sublime_view
+
+    @classmethod
+    def create_file_on_filesystem(cls, token, contents):
+        new_file = tempfile.NamedTemporaryFile(delete=False, suffix=re.sub("[^a-zA-Z0-9._-]", "", token))
+        new_file.write(contents)
+        filename = new_file.name
+        new_file.close()
+        return filename
+
+    @classmethod
+    def new_file(cls, token, contents, handler_id):
+        filename = cls.create_file_on_filesystem(token, contents)
+        window = sublime.active_window()
+        view = SublimeRmateView(window.open_file(filename))
+        view.set_rmate_properties(handler_id, token)
+        return view
+
+    def set_rmate_properties(self, handler_id, token):
+        self.sublime_view.settings().set("rmate_handler_id", handler_id)
+        self.sublime_view.settings().set("rmate_handler_token", token)
+
+
 class SublimeRmateAdapter:
     singleton_instance = None
 
@@ -48,18 +73,7 @@ class SublimeRmateAdapter:
         sublime.set_timeout(proc, 1)
 
     def open_file(self, token, contents, handler_id):
-        self.run_in_sublime(lambda: self.open_file_threaded(token, contents, handler_id))
-
-    def open_file_threaded(self, token, contents, handler_id):
-        new_file = tempfile.NamedTemporaryFile(delete=False, suffix=re.sub("[^a-zA-Z0-9._-]", "", token))
-        new_file.write(contents)
-        filename = new_file.name
-        new_file.close()
-
-        window = sublime.active_window()
-        view = window.open_file(filename)
-        view.settings().set("rmate_handler_id", handler_id)
-        view.settings().set("rmate_handler_token", token)
+        self.run_in_sublime(lambda: SublimeRmateView.new_file(token, contents, handler_id))
 
 
 class StartRmateCommand(sublime_plugin.ApplicationCommand):
