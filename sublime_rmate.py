@@ -32,8 +32,11 @@ class SublimeRmateAdapter:
         if not self.is_server_running():
             return
         print "stopping rmate server"
-        self.server.stop()
+        self.server.run_on_thread(lambda server: server.close_all())
         self.server = None
+
+    def close_handler(self, handler_id):
+        self.server.run_on_thread(lambda server: server.close_handler(handler_id))
 
     def run_in_sublime(self, proc):
         sublime.set_timeout(proc, 1)
