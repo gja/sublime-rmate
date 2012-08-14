@@ -7,6 +7,9 @@ import os
 
 
 class NullServer:
+    def __init__(self):
+        self.token = None
+
     def running(self):
         False
 
@@ -41,11 +44,13 @@ class SublimeRmateView:
         self.sublime_view.settings().set("rmate_handler_id", handler_id)
         self.sublime_view.settings().set("rmate_handler_token", token)
         self.sublime_view.settings().set("rmate_filename", filename)
+        self.sublime_view.settings().set("rmate_server_token", SublimeRmateAdapter.instance().server.token)
 
     def erase_rmate_properties(self):
         self.sublime_view.settings().erase("rmate_handler_id")
         self.sublime_view.settings().erase("rmate_handler_token")
         self.sublime_view.settings().erase("rmate_filename")
+        self.sublime_view.settings().erase("rmate_server_token")
 
     def close(self):
         SublimeRmateAdapter.instance().close_file(self.handler_id(), self.token())
@@ -70,8 +75,15 @@ class SublimeRmateView:
     def filename(self):
         return self.sublime_view.settings().get("rmate_filename")
 
+    def server_token(self):
+        return self.sublime_view.settings().get("rmate_server_token")
+
+    def valid_rmate_file(self):
+        current_server_token = SublimeRmateAdapter.instance().server.token
+        return self.sublime_view.settings().has("rmate_handler_id") and self.server_token() == current_server_token
+
     def not_rmate_file(self):
-        return not self.sublime_view.settings().has("rmate_handler_id")
+        return not self.valid_rmate_file()
 
     def contents(self):
         return self.sublime_view.substr(sublime.Region(0, self.sublime_view.size()))

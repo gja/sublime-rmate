@@ -15,4 +15,3 @@ Scroll down to the rmate section here: http://blog.macromates.com/2011/mate-and-
 Known Issues:
 -------------
 * File titles are not correct
-* Some weirdness happens occasionally when you start the server, stop it (leaving tabs open), start it again, open another file. This is probably because it shared file descriptors. I should fix this soon

@@ -2,6 +2,8 @@ import asyncore
 import asynchat
 import socket
 import threading
+import random
+import string
 
 
 # Ugly hack to communicate with the asyncore thread
@@ -20,6 +22,7 @@ class RunOnThread(asyncore.dispatcher):
 class RMateServer(asyncore.dispatcher):
     def __init__(self, sublime_plugin, connection_details = ('localhost', 52698)):
         self.run_map = {}
+        self.token = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(10))
         asyncore.dispatcher.__init__(self, map=self.run_map)
         self.sublime_plugin = sublime_plugin
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
